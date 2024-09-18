@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IShop | Shopping Online</title>
+    
+    <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.css">
+    <link rel="stylesheet" href="../node_modules/bootstrap-icons/font/bootstrap-icons.css">
+    <style>
+        nav span {
+            margin-right: 20px;
+        }
+        aside span {
+            margin-right: 10px;
+        }
+    </style>
+    <script src="../node_modules/jquery/dist/jquery.js"></script>
+    <script src="../node_modules/jquery.cookie/jquery.cookie.js"></script>
+    <script>
+        function LoadPage(pageUrl){
+            $.ajax({
+                    method:"get", 
+                    url: pageUrl,
+                    success: (data)=>{
+                        $("section").html(data);
+                    }
+             })
+        }
+        $(function(){
+            LoadPage("home.html");
+
+            $("#navCustomer").click(()=>{
+                LoadPage("customers.html")
+            })
+
+            $("#navHome").click(()=>{
+                LoadPage("home.html");
+            })
+
+            $(document).on("click", "#navbtnRegister", ()=>{
+                LoadPage("customer-register.html");
+            })
+
+            $(document).on("click", "#btnRegister", ()=>{
+                 var customer = {
+                    UserId: $("#txtId").val(),
+                    UserName: $("#txtName").val(),
+                    Password: $("#txtPwd").val(),
+                    Age : parseInt($("#txtAge").val()),
+                    Email: $("#txtEmail").val(),
+                    Mobile: $("#txtMobile").val()
+                 };
+                 $.ajax({
+                    method: "post",
+                    url: "http://localhost:4400/registercustomer",
+                    data: customer
+                 })
+                 alert("Registered Successfully..");
+                 LoadPage("customer-login.html");
+            });
+
+            $(document).on("keyup", "#txtId",()=>{
+                 $.ajax({
+                    method:"get", 
+                    url: "http://localhost:4400/customers",
+                    success: (customers)=>{
+                        for(var customer of customers) {
+                            if(customer.UserId==$("#txtId").val()){
+                                $("#userError").html("User Id Taken - Try Another").css("color","red");
+                                break;
+                            } else {
+                                $("#userError").html("User Id Available").css("color","green");
+                            }
+                        }
+                    }
+                 })
+            })
+            $(document).on("click", "#navbtnLogin", ()=>{
+                LoadPage("customer-login.html");
+            });
+            $(document).on("click", "#btnNew",()=>{
+                LoadPage("customer-register.html");
+            });
+
+            $(document).on("click", "#btnLogin", ()=>{
+        
+                $.ajax({
+                    method:"get", 
+                    url: "http://localhost:4400/customers",
+                    success : (customers) =>{
+                        var customer = customers.find((c)=>
+                           c.UserId==$("#txtId").val() && c.Password==$("#txtPwd").val()
+                        );
+                        if(customer.UserId==$("#txtId").val() && customer.Password==$("#txtPwd").val()) {
+                            $.cookie("userid", $("#txtId").val());
+                            $.ajax({
+                                    method:'get',
+                                    url: "http://localhost:4400/products", 
+                                    success: (data)=>{
+                                        
+                                        $.each(data, (key, product)=>{
+                                            $(`<tr><td>${product.Name}</td><td>${product.Price}</td><td><button class="btn btn-info"><span class="bi bi-eye-fill"></span></button></td></tr>`).appendTo("tbody");
+                                        })
+                                    }
+                                })
+                            LoadPage("products.html");
+                            $("#username").html($.cookie("userid"));
+                        } else {
+                            LoadPage("error.html");
+                        }
+                    }
+                })
+            })
+
+            $("#navProducts").click(()=>{
+                if($.cookie("userid")==undefined){
+                    LoadPage("customer-login.html");
+                } else {
+                    LoadPage("products.html");
+                }
+            })
+
+            $(document).on("click", "#btnSignout",()=>{
+                $.removeCookie("userid");
+                $("#username").html("");
+                LoadPage("customer-login.html");
+            })
+
+          
+        })
+    </script>
+</head>
+<body class="container-fluid">
+    <header class="d-flex bg-dark text-white mt-2 justify-content-between p-2">
+        <div class="brand">I-Shop.</div>
+        <nav>
+            <span><button id="navHome">Home</button></span>
+            <span><button id="navCustomer">Customer</button></span>
+            <span><button>Admin</button></span>
+            <span><button id="navProducts">Products</button></span>
+        </nav>
+        <aside>
+            <span class="bi bi-search"></span>
+            <span class="bi bi-heart"></span>
+            <span class="bi bi-cart"></span>
+            <span class="bi bi-person"></span>
+            <span id="username"></span>
+            
+            
+        </aside>
+    </header>
+    <section class="mt-4">
+
+    </section>
+</body>
+</html>
